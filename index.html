@@ -292,7 +292,7 @@ h1, h2, h3, h4 {
 <div id="cur"></div>
 
 <nav>
-  <div class="nav-logo">Who's the Next Elon <span>, A Neuropian Original</span></div>
+  <div class="nav-logo">Who's the Next Elon <span>, A Neuropian Original</span><span style="color:rgba(255,255,255,.35);margin-left:1.2rem;letter-spacing:.18em;font-size:.55rem">— Dylan Leitenberg, Founder</span></div>
   <ul class="nav-links">
     <li><a onclick="goTo('about')">The Show</a></li>
     <li><a onclick="goTo('process')">How It Works</a></li>
@@ -494,7 +494,7 @@ h1, h2, h3, h4 {
 <!-- BIG QUOTE -->
 <section class="bigquote">
   <div class="bigquote-inner reveal">
-    <p class="bigquote-text">"I think it's possible for ordinary people to choose to be extraordinary." <em>The question is whether you'll do the work.</em></p>
+    <p class="bigquote-text">"When something is important enough, you do it <em>even if the odds are not in your favor.</em></p>
     <div class="bigquote-attr">Elon Musk</div>
   </div>
 </section>
@@ -577,16 +577,44 @@ function goTo(id){
 // Apply now button
 document.querySelector('.nav-apply').addEventListener('click',()=>goTo('apply'));
 
-// Form submit
-document.querySelector('.form-submit').addEventListener('click',function(){
-  const email=document.querySelector('input[type="email"]').value.trim();
+// Form submit → Supabase
+const SUPA_URL='https://ngwlfysyoepclvimekvh.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5nd2xmeXN5b2VwY2x2aW1la3ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxODUzNjAsImV4cCI6MjA5Mzc2MTM2MH0.6ecznf1OjQmBGm_AY_l_MsIaGMe67_5y53CKbtfWtu8';
+document.querySelector('.form-submit').addEventListener('click',async function(){
+  const inputs=document.querySelectorAll('.apply input,.apply textarea');
+  const firstName=inputs[0].value.trim();
+  const lastName=inputs[1].value.trim();
+  const email=inputs[2].value.trim();
+  const country=inputs[3].value.trim();
+  const field=inputs[4].value.trim();
+  const built=document.querySelectorAll('.apply textarea')[0].value.trim();
+  const why=document.querySelectorAll('.apply textarea')[1].value.trim();
   if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
     alert('Please enter a valid email address.');return;
   }
-  this.querySelector('span').textContent='Application Received';
-  this.style.background='#111';
-  this.style.cursor='default';
+  this.querySelector('span').textContent='Submitting…';
   this.disabled=true;
+  try{
+    const res=await fetch(SUPA_URL+'/rest/v1/next_elon_applications',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=minimal'},
+      body:JSON.stringify({first_name:firstName,last_name:lastName,email,country,field_of_expertise:field,what_built:built,why_next_elon:why})
+    });
+    if(res.ok||res.status===201){
+      this.querySelector('span').textContent='Application Received';
+      this.style.background='#111';
+      this.style.cursor='default';
+    } else {
+      const err=await res.text();
+      this.querySelector('span').textContent='Submit Application';
+      this.disabled=false;
+      alert('Submission error: '+err);
+    }
+  } catch(e){
+    this.querySelector('span').textContent='Submit Application';
+    this.disabled=false;
+    alert('Network error. Please try again.');
+  }
 });
 
 // Number counter animation
